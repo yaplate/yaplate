@@ -20,23 +20,16 @@ from app.logger import get_logger
 logger = get_logger("yaplate.cache.store")
 
 
-# =========================================================
 # Utility
-# =========================================================
-
 def _as_str(x):
     return x.decode() if isinstance(x, bytes) else x
-
 
 def _safe_iter(keys: Iterable):
     for key in keys:
         yield _as_str(key)
 
 
-# =========================================================
 # Repository installation state
-# =========================================================
-
 def mark_repo_installed(repo: str):
     r = get_redis()
     try:
@@ -95,10 +88,8 @@ def purge_orphaned_repos(valid_repos: set[str]):
         logger.exception("Failed to purge orphaned repos")
 
 
-# =========================================================
-# Comment ↔ bot reply mapping
-# =========================================================
 
+# Comment <--> bot reply mapping
 def set_comment_mapping(user_comment_id: int, bot_comment_id: int):
     r = get_redis()
     try:
@@ -124,10 +115,7 @@ def delete_comment_mapping(user_comment_id: int):
         logger.exception("Failed to delete comment mapping: %s", user_comment_id)
 
 
-# =========================================================
 # Greeting tracking
-# =========================================================
-
 def has_been_greeted(repo_id: int, username: str) -> bool:
     r = get_redis()
     try:
@@ -144,10 +132,8 @@ def mark_greeted(repo_id: int, username: str):
     except Exception:
         logger.exception("Failed to mark greeted")
 
-# =========================================================
-# Greeting seeding (startup reconciliation)
-# =========================================================
 
+# Greeting seeding (startup reconciliation)
 def mark_user_seen(repo_id: int, username: str):
     """
     Mark a user as already seen in this repo.
@@ -167,8 +153,6 @@ def mark_user_seen(repo_id: int, username: str):
             username,
         )
 
-
-
 def has_been_greeted_pr(repo_id: int, username: str) -> bool:
     r = get_redis()
     try:
@@ -176,7 +160,6 @@ def has_been_greeted_pr(repo_id: int, username: str) -> bool:
     except Exception:
         logger.exception("Failed to check PR greeting state")
         return False
-
 
 def mark_greeted_pr(repo_id: int, username: str):
     r = get_redis()
@@ -186,10 +169,8 @@ def mark_greeted_pr(repo_id: int, username: str):
         logger.exception("Failed to mark PR greeted")
 
 
-# =========================================================
-# Follow-up scheduling
-# =========================================================
 
+# Follow-up scheduling
 def schedule_followup(repo: str, issue_number: int, assignee: str, lang: str, due_at: float, attempt: int = 1):
     if not is_repo_installed(repo):
         return
@@ -299,10 +280,7 @@ def clear_followup_completed(repo: str, issue_number: int):
     r.delete(f"{FOLLOWUP_COMPLETED_PREFIX}{repo}:{issue_number}")
 
 
-# =========================================================
 # Stale handling
-# =========================================================
-
 def schedule_stale(repo: str, issue_number: int, lang: str, due_at: float):
     if not is_repo_installed(repo):
         return
@@ -351,10 +329,8 @@ def get_stale_data(key: str):
         return {}
 
 
-# =========================================================
-# Repo-wide cleanup / migration
-# =========================================================
 
+# Repo-wide cleanup / migration
 def purge_repo(repo: str):
     r = get_redis()
 
