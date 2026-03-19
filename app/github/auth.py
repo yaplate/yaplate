@@ -18,7 +18,7 @@ _TOKEN_EXPIRY: float = 0.0
 def _load_private_key() -> str:
     """
     Load GitHub App private key from:
-    1) env var GITHUB_PRIVATE_KEY (recommended for Railway)
+    1) env var GITHUB_PRIVATE_KEY (recommended for Production)
     2) file path GITHUB_PRIVATE_KEY_PATH (recommended for local dev)
     """
     global _PRIVATE_KEY

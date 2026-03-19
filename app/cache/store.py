@@ -378,7 +378,7 @@ def migrate_repo(old_repo: str, new_repo: str):
         r.set(f"{INSTALLED_REPO_PREFIX}{new_repo}", 1)
 
     except Exception:
-        logger.exception("Failed to migrate repo: %s → %s", old_repo, new_repo)
+        logger.exception("Failed to migrate repo: %s -> %s", old_repo, new_repo)
 
 
 def purge_all():

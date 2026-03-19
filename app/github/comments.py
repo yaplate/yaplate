@@ -26,7 +26,8 @@ from app.cache.store import (
     reschedule_followup,
     get_followup_data,
     mark_followup_stopped,
-    mark_followup_completed
+    mark_followup_completed,
+    has_followup
 )
 from app.settings import FOLLOWUP_DEFAULT_INTERVAL_HOURS, MAX_FOLLOWUP_ATTEMPTS, STOPPING_ESCALATION_MAINTAINERS, STOPPING_ESCALATION_HARD_STOP
 from app.nlp.context_builder import build_reply_context
@@ -37,10 +38,7 @@ logger = get_logger("yaplate.github.comments")
 BOT_NAME = "yaplate"
 
 
-# --------------------------------------------------
 # Helpers
-# --------------------------------------------------
-
 def is_pure_quote(comment_body: str) -> bool:
     lines = [l.strip() for l in comment_body.strip().splitlines()]
     return bool(lines) and all(line.startswith(">") for line in lines)
@@ -85,10 +83,8 @@ async def stop_followups_with_notice(
     mark_followup_stopped(repo, issue_number)
 
 
-# --------------------------------------------------
-# Main handler
-# --------------------------------------------------
 
+# Main handler
 async def handle_comment(payload: Dict[str, Any]):
     try:
         action = payload.get("action")
@@ -114,13 +110,13 @@ async def handle_comment(payload: Dict[str, Any]):
 
         if not repo or issue_number is None:
             return
+        
+        followup_exists = has_followup(repo, issue_number)
 
         is_bot_command = f"@{BOT_NAME}" in comment_body.lower()
 
-        # --------------------------------------------------
-        # 1. Pure quote → hard stop (explicit disengagement)
-        # --------------------------------------------------
-        if action == "created" and is_pure_quote(comment_body):
+        # 1. Pure quote -> hard stop (explicit disengagement)
+        if action == "created" and followup_exists and is_pure_quote(comment_body):
             await stop_followups_with_notice(
                 repo,
                 issue_number,
@@ -129,9 +125,7 @@ async def handle_comment(payload: Dict[str, Any]):
             )
             return
 
-        # --------------------------------------------------
-        # 2. Quote reply + human text → possible escalation
-        # --------------------------------------------------
+        # 2. Quote reply + human text -> possible escalation
         if (
             action == "created"
             and comment_body.lstrip().startswith(">")
@@ -139,7 +133,7 @@ async def handle_comment(payload: Dict[str, Any]):
         ):
             user_text = extract_user_text(comment_body)
 
-            if user_text and await wants_maintainer_attention(user_text):
+            if followup_exists and user_text and await wants_maintainer_attention(user_text):
                 await stop_followups_with_notice(
                     repo,
                     issue_number,
@@ -148,7 +142,7 @@ async def handle_comment(payload: Dict[str, Any]):
                 )
                 return
 
-            # Otherwise: quote reply = acknowledgement → pause only
+            # Otherwise: quote reply = acknowledgement -> pause only
             cancel_stale(repo, issue_number)
 
             key = f"yaplate:followup:{repo}:{issue_number}"
@@ -163,14 +157,12 @@ async def handle_comment(payload: Dict[str, Any]):
                     mark_followup_completed(repo, issue_number)
             return
 
-        # --------------------------------------------------
-        # 3. Normal human reply → progress or pause
-        # --------------------------------------------------
-        if action == "created" and not is_bot_command:
+        # 3. Normal human reply -> progress or pause
+        if action == "created" and not is_bot_command:            
             cancel_stale(repo, issue_number)
 
-            # Plain-text maintainer wait → stop WITH notice
-            if await wants_maintainer_attention(comment_body):
+            # Plain-text maintainer wait -> stop WITH notice
+            if followup_exists and await wants_maintainer_attention(comment_body):
                 await stop_followups_with_notice(
                     repo,
                     issue_number,
@@ -179,7 +171,7 @@ async def handle_comment(payload: Dict[str, Any]):
                 )
                 return
 
-            # Otherwise: normal progress → reschedule follow-up
+            # Otherwise: normal progress -> reschedule follow-up
             key = f"yaplate:followup:{repo}:{issue_number}"
             data = get_followup_data(key)
 
@@ -192,9 +184,7 @@ async def handle_comment(payload: Dict[str, Any]):
                     cancel_followup(repo, issue_number)
                     mark_followup_completed(repo, issue_number)
 
-        # --------------------------------------------------
-        # 4. User deleted comment → remove bot mirror
-        # --------------------------------------------------
+        # 4. User deleted comment -> remove bot mirror
         if action == "deleted":
             await asyncio.sleep(1.5)
 
@@ -213,9 +203,7 @@ async def handle_comment(payload: Dict[str, Any]):
                 delete_comment_mapping(comment_id)
             return
 
-        # --------------------------------------------------
         # 5. Parse bot commands
-        # --------------------------------------------------
         summarize_parsed = parse_summarize_command(comment_body)
         reply_parsed = parse_reply_command(comment_body)
         translate_parsed = parse_translate_command(comment_body)
@@ -252,9 +240,7 @@ async def handle_comment(payload: Dict[str, Any]):
         else:
             return
 
-        # --------------------------------------------------
         # 6. Redis-backed reply mapping
-        # --------------------------------------------------
         await asyncio.sleep(1.5)
 
         if action == "created":

@@ -67,10 +67,7 @@ async def _request(
         raise
 
 
-# =========================================================
-# Public helpers (unchanged behavior)
-# =========================================================
-
+# Public helpers
 async def github_post(endpoint: str, json: dict):
     return await _request("POST", endpoint, json)
 

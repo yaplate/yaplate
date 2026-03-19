@@ -47,7 +47,7 @@ async def detect_with_fallback(title: str, body: str) -> str:
     parts = re.split(r"[。\n.!?]", body)
     texts: List[str] = [p.strip() for p in parts if len(p.strip()) > 10]
 
-    # If body chunks are too small → force English (unchanged)
+    # If body chunks are too small -> force English (unchanged)
     if not texts:
         return "en"
 
@@ -67,7 +67,7 @@ async def detect_with_fallback(title: str, body: str) -> str:
             return dominant
 
     # --------------------------------------------------
-    # 2️⃣ Low confidence → Gemini fallback (unchanged)
+    # 2️⃣ Low confidence -> Gemini fallback (unchanged)
     # --------------------------------------------------
     combined = f"Title: {title}\n\nBody: {body}"
     try:

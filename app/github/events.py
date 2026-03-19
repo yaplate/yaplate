@@ -36,7 +36,7 @@ async def handle_event(event_type: str, payload: Dict[str, Any]):
 
     try:
         # ---------------------------------------------------------
-        # 1. App uninstalled → purge EVERYTHING
+        # 1. App uninstalled -> purge EVERYTHING
         # ---------------------------------------------------------
         if event_type == "installation" and payload.get("action") == "deleted":
             logger.info("App uninstalled — purging all state")
@@ -44,7 +44,7 @@ async def handle_event(event_type: str, payload: Dict[str, Any]):
             return
 
         # ---------------------------------------------------------
-        # 2. App installed or repos added → mark installed
+        # 2. App installed or repos added -> mark installed
         # ---------------------------------------------------------
         if event_type == "installation" and payload.get("action") == "created":
             for repo in payload.get("repositories", []):
@@ -65,7 +65,7 @@ async def handle_event(event_type: str, payload: Dict[str, Any]):
                 return
 
         # ---------------------------------------------------------
-        # 3. Repository renamed → migrate all state
+        # 3. Repository renamed -> migrate all state
         # ---------------------------------------------------------
         if event_type == "repository" and payload.get("action") == "renamed":
             repo = payload.get("repository") or {}
@@ -76,7 +76,7 @@ async def handle_event(event_type: str, payload: Dict[str, Any]):
 
             if old_full and owner and new_name:
                 new_full = f"{owner}/{new_name}"
-                logger.info("Repository renamed: %s → %s", old_full, new_full)
+                logger.info("Repository renamed: %s -> %s", old_full, new_full)
                 migrate_repo(old_full, new_full)
 
             return
