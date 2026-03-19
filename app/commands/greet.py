@@ -21,11 +21,7 @@ ISSUE_WELCOME = ISSUE_WELCOME_MESSAGE
 
 PR_WELCOME = PR_WELCOME_MESSAGE
 
-
-# ---------------------------------------------------------
 # Public API
-# ---------------------------------------------------------
-
 async def greet_if_first_issue(
     repo_id: int,
     repo_full_name: str,
@@ -90,10 +86,7 @@ async def greet_if_first_pr(
     mark_greeted_pr(repo_id, username)
 
 
-# ---------------------------------------------------------
 # Internal helpers
-# ---------------------------------------------------------
-
 async def _send_greeting(
     repo_full_name: str,
     number: int,
