@@ -91,15 +91,22 @@ Follow-ups are posted in the assignee/author language when possible.
 
 ```mermaid
 flowchart TD
-    A[Follow-up Feature] -->|Reply| B[Schedule Next Follow-Up]
+    A[Follow-up Feature] -->|Reply| R((Reply)) 
+    R --> B[Schedule Next Follow-Up]
+    R --> B1[Escalation]
+    
     A -->|No reply| S1[Mark Stale]
 
-    B -->|Reply| C[Schedule Next Follow-Up]
+    B --> |Reply| R1((Reply))
+    R1 --> C[Schedule Next Follow-Up]
+    R1 --> C1[Escalation] 
+
     B -->|No reply| S2[Mark Stale]
 
-    C -->|Reply| D[...]
+    C -->|Reply| R2((Reply)) 
+    R2 --> D[...]
+    R2 --> D1[...]
     C -->|No reply| S3[Mark Stale]
-
 ```
 
 
