@@ -14,7 +14,7 @@ issue_number = get_issues.getIssueNumber()
 
 assignees = get_issues.getIssueAssignees()
 
-if assignees:
+if assignees is not None:
     token = installationToken.getInstallationToken()
 
     url = f"https://api.github.com/repos/{user}/{repo}/issues/{issue_number}/comments"
@@ -24,11 +24,11 @@ if assignees:
             "Accept" : "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
         }
-    # print(assignees[0]["login"])
+
     payload = {
-        "body" : f"Hey @{assignees[0]["login"]}. Can you please check and verify the cause of error as stated by @ashutoshdebug in the above message?"
+        "body" : f"Hello {assignees}. Thank you for opening this issue, the reviewers will get back to you shortly!"
     }
-    # response = requests.post(url, headers=headers, json=payload)
+    response = requests.post(url, headers=headers, json=payload)
 
 else:
     print("Can't post a comment")
